@@ -4,25 +4,16 @@ const fetch = require("node-fetch");
 const app = express();
 app.use(express.json());
 
+app.use(express.urlencoded({ extended: true }));
+
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-app.get("/lti/login", (req, res) => {
+// Accept ANY method and both trailing-slash / non-trailing-slash
+app.all(["/lti/login", "/lti/login/"], (req, res) => {
   res.redirect("/chat");
 });
 
-app.post("/lti/login", (req, res) => {
-  res.redirect("/chat");
-});
-
-app.get("/lti/launch", (req, res) => {
-  res.redirect("/chat");
-});
-
-app.post("/lti/launch", (req, res) => {
-  res.redirect("/chat");
-});
-
-app.get("/lti/launch", (req, res) => {
+app.all(["/lti/launch", "/lti/launch/"], (req, res) => {
   res.redirect("/chat");
 });
 
