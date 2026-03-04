@@ -46,28 +46,28 @@ app.get("/chat", (req, res) => {
   `);
 });
 
-app.post("/ask", async (req,res)=>{
+app.post("/ask", async (req, res) => {
+  try {
+    const question = (req.body?.question || "").trim();
+    if (!question) return res.status(400).json({ error: "Missing question" });
 
-  const question = req.body.question;
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "OPENAI_API_KEY is not set on the server" });
 
-  const response = await fetch("https://api.openai.com/v1/responses",{
-    method:"POST",
-    headers:{
-      "Authorization":`Bearer ${OPENAI_API_KEY}`,
-      "Content-Type":"application/json"
-    },
-    body:JSON.stringify({
-      model:"gpt-4.1-mini",
+    const OpenAI = require("openai");
+    const client = new OpenAI({ apiKey });
+
+    const result = await client.responses.create({
+      model: "gpt-4.1-mini",
       input: question
-    })
-  });
+    });
 
-  const data = await response.json();
-
-  res.json({
-    answer: data.output[0].content[0].text
-  });
-
+    const answer = result.output?.[0]?.content?.[0]?.text || "(No text returned)";
+    res.json({ answer });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: String(err?.message || err) });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
