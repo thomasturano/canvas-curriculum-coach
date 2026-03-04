@@ -158,30 +158,148 @@ app.all(["/lti/launch", "/lti/launch/"], (req, res) => {
 
 app.get("/chat", (req, res) => {
   res.send(`
-    <html>
-      <body style="font-family: Arial; margin:40px">
-        <h2>Curriculum Coach</h2>
-        <p>Ask a question about differentiating instruction.</p>
-        <input id="question" style="width:600px"/>
-        <button onclick="ask()">Ask</button>
-        <pre id="answer"></pre>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Curriculum Coach</title>
+</head>
+<body class="bg-slate-50">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-3xl bg-white shadow-sm rounded-2xl border border-slate-200 overflow-hidden">
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-slate-200 bg-white">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-xl font-semibold text-slate-900">Curriculum Coach</h1>
+            <p class="text-sm text-slate-500">Ask for differentiation ideas grounded in Curriculum Hub.</p>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">Canvas</span>
+        </div>
+      </div>
 
-        <script>
-          async function ask(){
-            const q = document.getElementById("question").value;
+      <!-- Chat -->
+      <div id="thread" class="px-5 py-4 space-y-4 h-[55vh] overflow-y-auto bg-slate-50"></div>
 
-            const res = await fetch("/ask",{
-              method:"POST",
-              headers:{"Content-Type":"application/json"},
-              body:JSON.stringify({question:q})
-            });
+      <!-- Composer -->
+      <div class="p-4 border-t border-slate-200 bg-white">
+        <div class="flex gap-2">
+          <input id="question"
+            class="flex-1 rounded-xl border border-slate-300 px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
+            placeholder="Example: What remediation can I give students struggling with 6.RP.A.1?"
+          />
+          <button id="askBtn"
+            class="rounded-xl bg-slate-900 text-white px-4 py-3 font-medium hover:bg-slate-800 active:bg-slate-950 disabled:opacity-50">
+            Ask
+          </button>
+        </div>
+        <div class="mt-2 text-xs text-slate-500">
+          Tip: include the standard (e.g., 6.RP.A.1) and what you observed (below proficiency, misconceptions, etc.).
+        </div>
+      </div>
+    </div>
+  </div>
 
-            const data = await res.json();
-            document.getElementById("answer").innerText = data.answer;
-          }
-        </script>
-      </body>
-    </html>
+<script>
+  const thread = document.getElementById("thread");
+  const input = document.getElementById("question");
+  const btn = document.getElementById("askBtn");
+
+  function addBubble(role, text, metaHtml = "") {
+    const wrap = document.createElement("div");
+    wrap.className = role === "user" ? "flex justify-end" : "flex justify-start";
+
+    const bubble = document.createElement("div");
+    bubble.className =
+      (role === "user"
+        ? "max-w-[85%] rounded-2xl rounded-br-sm bg-slate-900 text-white px-4 py-3 shadow-sm"
+        : "max-w-[85%] rounded-2xl rounded-bl-sm bg-white text-slate-900 px-4 py-3 shadow-sm border border-slate-200");
+
+    bubble.innerHTML = \`
+      <div class="whitespace-pre-wrap leading-relaxed text-sm">\${escapeHtml(text)}</div>
+      \${metaHtml}
+    \`;
+
+    wrap.appendChild(bubble);
+    thread.appendChild(wrap);
+    thread.scrollTop = thread.scrollHeight;
+    return bubble;
+  }
+
+  function escapeHtml(str) {
+    return String(str || "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;");
+  }
+
+  function sourcesHtml(sources) {
+    if (!sources || !sources.length) return "";
+    const links = sources.map(s => \`<a class="underline" href="\${s.url}" target="_blank" rel="noopener">\${escapeHtml(s.title)}</a>\`).join("<br/>");
+    return \`
+      <div class="mt-3 pt-3 border-t border-slate-200">
+        <div class="text-xs font-semibold text-slate-600 mb-1">Sources</div>
+        <div class="text-xs text-slate-600">\${links}</div>
+      </div>
+    \`;
+  }
+
+  async function ask() {
+    const q = input.value.trim();
+    if (!q) return;
+
+    input.value = "";
+    btn.disabled = true;
+
+    addBubble("user", q);
+
+    const thinking = addBubble("assistant", "Thinking…");
+
+    try {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ question: q })
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        thinking.innerHTML = \`
+          <div class="text-sm font-semibold text-red-700">Error</div>
+          <div class="text-sm text-red-700 whitespace-pre-wrap">\${escapeHtml(data.error || "Request failed")}</div>
+        \`;
+        return;
+      }
+
+      const answer = data.answer || "(No answer returned)";
+      thinking.innerHTML = \`
+        <div class="whitespace-pre-wrap leading-relaxed text-sm">\${escapeHtml(answer)}</div>
+        \${sourcesHtml(data.sources)}
+      \`;
+    } catch (e) {
+      thinking.innerHTML = \`
+        <div class="text-sm font-semibold text-red-700">Error</div>
+        <div class="text-sm text-red-700 whitespace-pre-wrap">\${escapeHtml(String(e))}</div>
+      \`;
+    } finally {
+      btn.disabled = false;
+      input.focus();
+    }
+  }
+
+  btn.addEventListener("click", ask);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") ask();
+  });
+
+  // Welcome message
+  addBubble("assistant", "Hi! Ask me for differentiated remediation ideas. If you include the standard (like 6.RP.A.1), I can be more specific.");
+</script>
+</body>
+</html>
   `);
 });
 
