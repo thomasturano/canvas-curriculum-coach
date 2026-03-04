@@ -1,6 +1,16 @@
 const express = require("express");
 const fetch = require("node-fetch");
 
+app.post("/refresh", async (req, res) => {
+  try {
+    pageCache = { fetchedAt: 0, pages: [] };
+    await getCurriculumPages();
+    res.json({ ok: true, pages: pageCache.pages.length });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 const CANVAS_BASE_URL = process.env.CANVAS_BASE_URL;
 const CANVAS_TOKEN = process.env.CANVAS_TOKEN;
 const CURRICULUM_COURSE_ID = process.env.CURRICULUM_COURSE_ID;
