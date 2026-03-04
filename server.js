@@ -6,11 +6,19 @@ app.use(express.json());
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-app.get("/", (req, res) => {
-  res.send("Curriculum Coach is running!");
+app.get("/lti/login", (req, res) => {
+  res.redirect("/chat");
 });
 
-app.get("/lti/login", (req, res) => {
+app.post("/lti/login", (req, res) => {
+  res.redirect("/chat");
+});
+
+app.get("/lti/launch", (req, res) => {
+  res.redirect("/chat");
+});
+
+app.post("/lti/launch", (req, res) => {
   res.redirect("/chat");
 });
 
