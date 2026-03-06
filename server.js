@@ -157,69 +157,51 @@ app.all("/lti/editor/launch", (req, res) => {
         <div id="preview" class="preview"></div>
       </div>
 
-      <script>
-        async function generate() {
-          const standard = document.getElementById("standard").value;
-          const prompt = document.getElementById("prompt").value;
+<script>
+  async function generate() {
+    try {
+      const standard = document.getElementById("standard").value;
+      const prompt = document.getElementById("prompt").value;
 
-          const response = await fetch("https://coach.thomasturano.com/generate", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ standard, prompt })
-          });
+      const response = await fetch("https://coach.thomasturano.com/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ standard, prompt })
+      });
 
-          const data = await response.text();
-          document.getElementById("preview").innerHTML = data;
-        }
-
-async function insertContent() {
-  const html = document.getElementById("preview").innerHTML;
-
-  try {
-    console.log("window", window);
-    console.log("window.parent", window.parent);
-    console.log("window.top", window.top);
-    console.log("parent.tinymce", window.parent?.tinymce);
-    console.log("top.tinymce", window.top?.tinymce);
-
-    if (window.top && window.top.tinymce && window.top.tinymce.activeEditor) {
-      window.top.tinymce.activeEditor.insertContent(html);
-      alert("Content inserted into Canvas.");
-      return;
+      const data = await response.text();
+      document.getElementById("preview").innerHTML = data;
+    } catch (error) {
+      console.error("GENERATE ERROR:", error);
+      alert("Generate failed.");
     }
-
-    if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
-      window.parent.tinymce.activeEditor.insertContent(html);
-      alert("Content inserted into Canvas.");
-      return;
-    }
-
-    alert("Insert failed.");
-  } catch (error) {
-    console.error("INSERT ERROR:", error);
-    alert("Insert failed.");
   }
-}
 
-    if (window.parent && window.parent.document) {
-      const iframe = window.parent.document.querySelector("iframe.tox-edit-area__iframe");
+  async function insertContent() {
+    const html = document.getElementById("preview").innerHTML;
 
-      if (iframe && iframe.contentWindow && iframe.contentWindow.document && iframe.contentWindow.document.body) {
-        iframe.contentWindow.document.body.innerHTML += html;
+    try {
+      if (window.top && window.top.tinymce && window.top.tinymce.activeEditor) {
+        window.top.tinymce.activeEditor.insertContent(html);
         alert("Content inserted into Canvas.");
         return;
       }
-    }
 
-    alert("Could not find the Canvas editor.");
-  } catch (error) {
-    console.error(error);
-    alert("Insert failed.");
+      if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
+        window.parent.tinymce.activeEditor.insertContent(html);
+        alert("Content inserted into Canvas.");
+        return;
+      }
+
+      alert("Could not find the Canvas editor.");
+    } catch (error) {
+      console.error("INSERT ERROR:", error);
+      alert("Insert failed.");
+    }
   }
-}
-      </script>
+</script>
     </body>
     </html>
   `);
