@@ -190,14 +190,6 @@ Teacher request: ${prompt}`
   }
 });
 
-    const html = completion.choices[0].message.content;
-    res.send(html);
-  } catch (error) {
-    console.error(error);
-    res.send("<p>Error generating content.</p>");
-  }
-});
-
 app.post("/editor/insert", (req, res) => {
   const html = req.body.html;
 
