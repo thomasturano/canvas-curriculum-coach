@@ -174,16 +174,36 @@ app.all("/lti/editor/launch", (req, res) => {
           document.getElementById("preview").innerHTML = data;
         }
 
-        async function insertContent() {
-          const html = document.getElementById("preview").innerHTML;
+async function insertContent() {
+  const html = document.getElementById("preview").innerHTML;
 
-          if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
-            const editor = window.parent.tinymce.activeEditor;
-            editor.insertContent(html);
-          } else {
-            alert("Could not find the Canvas editor.");
-          }
-        }
+  try {
+    if (window.parent && window.parent.tinymce) {
+      const editor = window.parent.tinymce.activeEditor;
+
+      if (editor) {
+        editor.insertContent(html);
+        alert("Content inserted into Canvas.");
+        return;
+      }
+    }
+
+    if (window.parent && window.parent.document) {
+      const iframe = window.parent.document.querySelector("iframe.tox-edit-area__iframe");
+
+      if (iframe && iframe.contentWindow && iframe.contentWindow.document && iframe.contentWindow.document.body) {
+        iframe.contentWindow.document.body.innerHTML += html;
+        alert("Content inserted into Canvas.");
+        return;
+      }
+    }
+
+    alert("Could not find the Canvas editor.");
+  } catch (error) {
+    console.error(error);
+    alert("Insert failed.");
+  }
+}
       </script>
     </body>
     </html>
