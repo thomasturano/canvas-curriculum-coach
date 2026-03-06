@@ -172,7 +172,7 @@ app.post("/generate", async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You help teachers create standards-aligned classroom content. Return clean HTML."
+          content: "You help teachers create standards-aligned classroom content. Return ONLY valid HTML. Do not include markdown code blocks."
         },
         {
           role: "user",
