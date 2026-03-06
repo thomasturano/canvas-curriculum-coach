@@ -39,181 +39,298 @@ Chat Page
 app.get("/chat", (req, res) => {
   res.send(`
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Curriculum Coach</title>
-<style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Curriculum Coach</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-body{
-font-family: Arial;
-background:#f4f6fb;
-margin:0;
-padding:30px;
-}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f5f7;
+      color: #1f2937;
+    }
 
-.container{
-max-width:900px;
-margin:auto;
-background:white;
-border-radius:12px;
-box-shadow:0 10px 25px rgba(0,0,0,.08);
-padding:20px;
-}
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px;
+    }
 
-h1{
-margin-top:0;
-}
+    .card {
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
 
-.chat{
-height:450px;
-overflow-y:auto;
-border:1px solid #ddd;
-border-radius:8px;
-padding:15px;
-background:#fafafa;
-}
+    .header {
+      padding: 20px 24px 16px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
 
-.message{
-margin-bottom:12px;
-}
+    .title {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f2937;
+    }
 
-.user{
-text-align:right;
-}
+    .subtitle {
+      margin: 8px 0 0 0;
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
 
-.user span{
-background:#111827;
-color:white;
-padding:10px 14px;
-border-radius:12px;
-display:inline-block;
-}
+    .chat-window {
+      height: 460px;
+      overflow-y: auto;
+      padding: 20px;
+      background: #f9fafb;
+    }
 
-.bot span{
-background:white;
-border:1px solid #ddd;
-padding:10px 14px;
-border-radius:12px;
-display:inline-block;
-}
+    .message-row {
+      display: flex;
+      margin-bottom: 14px;
+    }
 
-.controls{
-margin-top:15px;
-display:flex;
-gap:10px;
-}
+    .message-row.user {
+      justify-content: flex-end;
+    }
 
-input{
-flex:1;
-padding:12px;
-border-radius:8px;
-border:1px solid #ccc;
-font-size:14px;
-}
+    .message-row.bot {
+      justify-content: flex-start;
+    }
 
-button{
-padding:12px 18px;
-border-radius:8px;
-border:none;
-background:#111827;
-color:white;
-font-weight:bold;
-cursor:pointer;
-}
+    .bubble {
+      max-width: 78%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
 
-button:hover{
-background:#000;
-}
+    .user .bubble {
+      background: #0f172a;
+      color: #ffffff;
+      border-bottom-right-radius: 4px;
+    }
 
-.sources{
-margin-top:8px;
-font-size:12px;
-color:#555;
-}
+    .bot .bubble {
+      background: #ffffff;
+      color: #1f2937;
+      border: 1px solid #d1d5db;
+      border-bottom-left-radius: 4px;
+    }
 
-</style>
+    .sources {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .sources strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #374151;
+    }
+
+    .sources a {
+      color: #1d4ed8;
+      text-decoration: none;
+    }
+
+    .sources a:hover {
+      text-decoration: underline;
+    }
+
+    .composer {
+      padding: 16px 20px 20px 20px;
+      border-top: 1px solid #e5e7eb;
+      background: #ffffff;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .question-input {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      outline: none;
+    }
+
+    .question-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .ask-button {
+      padding: 12px 18px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .ask-button:hover {
+      background: #1d4ed8;
+    }
+
+    .ask-button:disabled {
+      background: #93c5fd;
+      cursor: not-allowed;
+    }
+
+    .helper-text {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #6b7280;
+      min-height: 16px;
+    }
+  </style>
 </head>
-
 <body>
+  <div class="page">
+    <div class="card">
+      <div class="header">
+        <h1 class="title">Curriculum Coach</h1>
+        <p class="subtitle">
+          Ask for differentiation ideas, remediation support, and instructional guidance.
+          Include the standard or skill for more targeted help.
+        </p>
+      </div>
 
-<div class="container">
+      <div id="chatWindow" class="chat-window"></div>
 
-<h1>Curriculum Coach</h1>
-<p>Ask a question about differentiation or instructional support.</p>
+      <div class="composer">
+        <div class="input-row">
+          <input
+            id="questionInput"
+            class="question-input"
+            type="text"
+            placeholder="Example: What remediation can I give students struggling with 6.RP.A.1?"
+          />
+          <button id="askButton" class="ask-button" onclick="askQuestion()">Ask</button>
+        </div>
+        <div class="helper-text">
+          Tip: include what students missed, the standard, and whether you want small-group, independent, or scaffolded support.
+        </div>
+        <div id="status" class="status"></div>
+      </div>
+    </div>
+  </div>
 
-<div id="chat" class="chat"></div>
+  <script>
+    const chatWindow = document.getElementById("chatWindow");
+    const questionInput = document.getElementById("questionInput");
+    const askButton = document.getElementById("askButton");
+    const status = document.getElementById("status");
 
-<div class="controls">
-<input id="question" placeholder="Example: Explain differentiation strategies for struggling math students">
-<button onclick="ask()">Ask</button>
-</div>
+    function addMessage(role, text, sources = []) {
+      const row = document.createElement("div");
+      row.className = "message-row " + role;
 
-</div>
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
 
-<script>
+      if (sources && sources.length > 0) {
+        const sourcesDiv = document.createElement("div");
+        sourcesDiv.className = "sources";
 
-const chat = document.getElementById("chat");
+        let html = "<strong>Sources</strong>";
+        for (const source of sources) {
+          html += '<div><a href="' + source.url + '" target="_blank" rel="noopener noreferrer">' + source.title + "</a></div>";
+        }
+        sourcesDiv.innerHTML = html;
+        bubble.appendChild(sourcesDiv);
+      }
 
-function addMessage(role,text){
+      row.appendChild(bubble);
+      chatWindow.appendChild(row);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      return row;
+    }
 
-const div = document.createElement("div");
-div.className = "message " + role;
+    async function askQuestion() {
+      const question = questionInput.value.trim();
+      if (!question) return;
 
-const span = document.createElement("span");
-span.innerText = text;
+      addMessage("user", question);
+      questionInput.value = "";
+      askButton.disabled = true;
+      status.textContent = "Thinking...";
 
-div.appendChild(span);
-chat.appendChild(div);
+      const loadingRow = addMessage("bot", "Thinking...");
 
-chat.scrollTop = chat.scrollHeight;
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ question })
+        });
 
-}
+        const data = await response.json().catch(() => ({}));
 
-async function ask(){
+        loadingRow.remove();
 
-const input = document.getElementById("question");
+        if (!response.ok) {
+          addMessage("bot", data.error || "Something went wrong.");
+        } else {
+          addMessage("bot", data.answer || "No answer returned.", data.sources || []);
+        }
+      } catch (error) {
+        loadingRow.remove();
+        addMessage("bot", "Request failed. Please try again.");
+      } finally {
+        askButton.disabled = false;
+        status.textContent = "";
+        questionInput.focus();
+      }
+    }
 
-const q = input.value.trim();
-if(!q) return;
+    questionInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        askQuestion();
+      }
+    });
 
-addMessage("user",q);
-input.value="";
-
-addMessage("bot","Thinking...");
-
-const res = await fetch("/ask",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({question:q})
-});
-
-const data = await res.json();
-
-chat.lastChild.remove();
-
-addMessage("bot",data.answer);
-
-if(data.sources && data.sources.length){
-
-const src = document.createElement("div");
-src.className="sources";
-src.innerHTML="<b>Sources</b><br>" +
-data.sources.map(s=>'<a href="'+s.url+'" target="_blank">'+s.title+'</a>').join("<br>");
-
-chat.appendChild(src);
-
-}
-
-}
-
-addMessage("bot","Hi! Ask me for differentiation ideas.");
-
-</script>
-
+    addMessage(
+      "bot",
+      "Hi! I can help with differentiation, remediation, and instructional ideas. Ask me about a specific standard, skill, or student need."
+    );
+  </script>
 </body>
 </html>
-`);
+  `);
 });
 
 /* ------------------------------
