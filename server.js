@@ -21,6 +21,37 @@ app.get("/", (req, res) => {
 });
 
 /* ------------------------------
+post thing
+------------------------------ */
+
+app.post("/generate", async (req, res) => {
+  try {
+    const { standard, prompt } = req.body;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You help teachers create standards-aligned classroom content for Canvas LMS. Return ONLY valid HTML. Do not use markdown. Do not wrap the response in code fences."
+        },
+        {
+          role: "user",
+          content: `Standard: ${standard}
+Teacher request: ${prompt}`
+        }
+      ]
+    });
+
+    const html = completion.choices[0].message.content;
+    res.send(html);
+  } catch (error) {
+    console.error(error);
+    res.send("<p>Error generating content.</p>");
+  }
+});
+
+/* ------------------------------
 Canvas LTI Endpoints
 ------------------------------ */
 
