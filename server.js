@@ -95,34 +95,57 @@ app.all("/lti/editor/launch", (req, res) => {
           This is a prototype. Edit the content below, then click Insert Into Canvas.
         </p>
 
-        <textarea id="content"><h2>Example Differentiation Activity</h2>
-<p>This activity supports students who are struggling with the standard.</p>
-<ul>
-  <li>Small-group reteach</li>
-  <li>Guided practice</li>
-  <li>Quick exit ticket</li>
-</ul></textarea>
+<label>Standard</label>
+<input id="standard" placeholder="ex: 6.RP.A.1">
+
+<label>Teacher Prompt</label>
+<textarea id="prompt" rows="4"
+placeholder="Create a reteach activity for struggling students"></textarea>
+
+<button onclick="generate()">Generate</button>
+
+<div class="preview" id="preview"></div>
+
+<br>
+
+<button onclick="insertContent()">Insert Into Canvas</button>
 
         <br />
         <button onclick="insertContent()">Insert Into Canvas</button>
       </div>
 
-      <script>
-        async function insertContent() {
-          const html = document.getElementById("content").value;
+      async function generate(){
 
-          const response = await fetch("/editor/insert", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ html: html })
-          });
+const standard=document.getElementById("standard").value
+const prompt=document.getElementById("prompt").value
 
-          const result = await response.text();
-          alert(result);
-        }
-      </script>
+const response=await fetch("/generate",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({standard,prompt})
+})
+
+const data=await response.text()
+
+document.getElementById("preview").innerHTML=data
+
+}
+
+async function insertContent(){
+
+const html=document.getElementById("preview").innerHTML
+
+const response=await fetch("/editor/insert",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({html})
+})
+
+const result=await response.text()
+
+alert(result)
+
+}
     </body>
     </html>
   `);
