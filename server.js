@@ -143,25 +143,16 @@ app.all("/lti/editor/launch", (req, res) => {
           document.getElementById("preview").innerHTML = data;
         }
 
-        async function insertContent() {
-          const html = document.getElementById("preview").innerHTML;
+      async function insertContent() {
+  const html = document.getElementById("preview").innerHTML;
 
-          const response = await fetch("/editor/insert", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ html: html })
-          });
-
-          const result = await response.text();
-          alert(result);
-        }
-      </script>
-    </body>
-    </html>
-  `);
-});
+  if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
+    const editor = window.parent.tinymce.activeEditor;
+    editor.insertContent(html);
+  } else {
+    alert("Could not find the Canvas editor.");
+  }
+}
 
 app.post("/generate", async (req, res) => {
   try {
