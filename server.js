@@ -176,11 +176,19 @@ app.post("/generate", async (req, res) => {
         },
         {
           role: "user",
-          content: \`Standard: \${standard}
-Teacher request: \${prompt}\`
+          content: `Standard: ${standard}
+Teacher request: ${prompt}`
         }
       ]
     });
+
+    const html = completion.choices[0].message.content;
+    res.send(html);
+  } catch (error) {
+    console.error(error);
+    res.send("<p>Error generating content.</p>");
+  }
+});
 
     const html = completion.choices[0].message.content;
     res.send(html);
