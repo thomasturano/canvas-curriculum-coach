@@ -162,7 +162,7 @@ app.all("/lti/editor/launch", (req, res) => {
           const standard = document.getElementById("standard").value;
           const prompt = document.getElementById("prompt").value;
 
-          const response = await fetch("/generate", {
+          const response = await fetch("https://coach.thomasturano.com/generate", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
