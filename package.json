@@ -1,4 +1,9 @@
 {
+    "answer": "text here",
+  "sources": [
+    { "title": "Page Title", "url": "https://..." }
+  ]
+},
   "name": "canvas-curriculum-coach",
   "version": "1.0.0",
   "description": "Canvas AI Curriculum Coach",
