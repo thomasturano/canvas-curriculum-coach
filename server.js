@@ -32,6 +32,112 @@ app.all("/lti/launch", (req, res) => {
   res.redirect("/chat");
 });
 
+app.all("/lti/editor/login", (req, res) => {
+  res.redirect("/lti/editor/launch");
+});
+
+app.all("/lti/editor/launch", (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Curriculum Content Builder</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 24px;
+          background: #f7f7f7;
+        }
+        .card {
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          padding: 20px;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        h1 {
+          margin-top: 0;
+        }
+        textarea {
+          width: 100%;
+          height: 220px;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+        }
+        button {
+          margin-top: 16px;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 12px 18px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        button:hover {
+          background: #1d4ed8;
+        }
+        .helper {
+          color: #666;
+          font-size: 13px;
+          margin-bottom: 12px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>Curriculum Content Builder</h1>
+        <p class="helper">
+          This is a prototype. Edit the content below, then click Insert Into Canvas.
+        </p>
+
+        <textarea id="content"><h2>Example Differentiation Activity</h2>
+<p>This activity supports students who are struggling with the standard.</p>
+<ul>
+  <li>Small-group reteach</li>
+  <li>Guided practice</li>
+  <li>Quick exit ticket</li>
+</ul></textarea>
+
+        <br />
+        <button onclick="insertContent()">Insert Into Canvas</button>
+      </div>
+
+      <script>
+        async function insertContent() {
+          const html = document.getElementById("content").value;
+
+          const response = await fetch("/editor/insert", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ html: html })
+          });
+
+          const result = await response.text();
+          alert(result);
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.post("/editor/insert", (req, res) => {
+  const html = req.body.html;
+
+  if (!html) {
+    return res.send("No HTML received.");
+  }
+
+  res.send("Prototype works: content captured successfully.");
+});
+
 /* ------------------------------
 Chat Page
 ------------------------------ */
