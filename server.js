@@ -143,42 +143,20 @@ app.all("/lti/editor/launch", (req, res) => {
           document.getElementById("preview").innerHTML = data;
         }
 
-      async function insertContent() {
-  const html = document.getElementById("preview").innerHTML;
+        async function insertContent() {
+          const html = document.getElementById("preview").innerHTML;
 
-  if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
-    const editor = window.parent.tinymce.activeEditor;
-    editor.insertContent(html);
-  } else {
-    alert("Could not find the Canvas editor.");
-  }
-}
-
-app.post("/generate", async (req, res) => {
-  try {
-    const { standard, prompt } = req.body;
-
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content: "You help teachers create standards-aligned classroom content. Return ONLY valid HTML. Do not include markdown code blocks."
-        },
-        {
-          role: "user",
-          content: `Standard: ${standard}
-Teacher request: ${prompt}`
+          if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
+            const editor = window.parent.tinymce.activeEditor;
+            editor.insertContent(html);
+          } else {
+            alert("Could not find the Canvas editor.");
+          }
         }
-      ]
-    });
-
-    const html = completion.choices[0].message.content;
-    res.send(html);
-  } catch (error) {
-    console.error(error);
-    res.send("<p>Error generating content.</p>");
-  }
+      </script>
+    </body>
+    </html>
+  `);
 });
 
 app.post("/editor/insert", (req, res) => {
