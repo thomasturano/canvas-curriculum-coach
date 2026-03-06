@@ -178,15 +178,30 @@ async function insertContent() {
   const html = document.getElementById("preview").innerHTML;
 
   try {
-    if (window.parent && window.parent.tinymce) {
-      const editor = window.parent.tinymce.activeEditor;
+    console.log("window", window);
+    console.log("window.parent", window.parent);
+    console.log("window.top", window.top);
+    console.log("parent.tinymce", window.parent?.tinymce);
+    console.log("top.tinymce", window.top?.tinymce);
 
-      if (editor) {
-        editor.insertContent(html);
-        alert("Content inserted into Canvas.");
-        return;
-      }
+    if (window.top && window.top.tinymce && window.top.tinymce.activeEditor) {
+      window.top.tinymce.activeEditor.insertContent(html);
+      alert("Content inserted into Canvas.");
+      return;
     }
+
+    if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
+      window.parent.tinymce.activeEditor.insertContent(html);
+      alert("Content inserted into Canvas.");
+      return;
+    }
+
+    alert("Insert failed.");
+  } catch (error) {
+    console.error("INSERT ERROR:", error);
+    alert("Insert failed.");
+  }
+}
 
     if (window.parent && window.parent.document) {
       const iframe = window.parent.document.querySelector("iframe.tox-edit-area__iframe");
