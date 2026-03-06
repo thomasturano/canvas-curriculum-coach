@@ -59,17 +59,27 @@ app.all("/lti/editor/launch", (req, res) => {
         h1 {
           margin-top: 0;
         }
-        textarea {
+        label {
+          display: block;
+          font-weight: bold;
+          margin-top: 14px;
+          margin-bottom: 6px;
+        }
+        input, textarea {
           width: 100%;
-          height: 220px;
           padding: 12px;
           border-radius: 8px;
           border: 1px solid #ccc;
           font-family: Arial, sans-serif;
           font-size: 14px;
+          box-sizing: border-box;
+        }
+        textarea {
+          min-height: 160px;
         }
         button {
           margin-top: 16px;
+          margin-right: 10px;
           background: #2563eb;
           color: white;
           border: none;
@@ -86,69 +96,98 @@ app.all("/lti/editor/launch", (req, res) => {
           font-size: 13px;
           margin-bottom: 12px;
         }
+        .preview {
+          margin-top: 20px;
+          padding: 15px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          background: #fafafa;
+          min-height: 80px;
+        }
       </style>
     </head>
     <body>
       <div class="card">
         <h1>Curriculum Content Builder</h1>
+
         <p class="helper">
-          This is a prototype. Edit the content below, then click Insert Into Canvas.
+          This is a prototype. Generate content, preview it, then click Insert Into Canvas.
         </p>
 
-<label>Standard</label>
-<input id="standard" placeholder="ex: 6.RP.A.1">
+        <label for="standard">Standard</label>
+        <input id="standard" placeholder="ex: 6.RP.A.1" />
 
-<label>Teacher Prompt</label>
-<textarea id="prompt" rows="4"
-placeholder="Create a reteach activity for struggling students"></textarea>
+        <label for="prompt">Teacher Prompt</label>
+        <textarea id="prompt" placeholder="Create a reteach activity for struggling students"></textarea>
 
-<button onclick="generate()">Generate</button>
-
-<div class="preview" id="preview"></div>
-
-<br>
-
-<button onclick="insertContent()">Insert Into Canvas</button>
-
-        <br />
+        <button onclick="generate()">Generate</button>
         <button onclick="insertContent()">Insert Into Canvas</button>
+
+        <div id="preview" class="preview"></div>
       </div>
 
-      async function generate(){
+      <script>
+        async function generate() {
+          const standard = document.getElementById("standard").value;
+          const prompt = document.getElementById("prompt").value;
 
-const standard=document.getElementById("standard").value
-const prompt=document.getElementById("prompt").value
+          const response = await fetch("/generate", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ standard, prompt })
+          });
 
-const response=await fetch("/generate",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({standard,prompt})
-})
+          const data = await response.text();
+          document.getElementById("preview").innerHTML = data;
+        }
 
-const data=await response.text()
+        async function insertContent() {
+          const html = document.getElementById("preview").innerHTML;
 
-document.getElementById("preview").innerHTML=data
+          const response = await fetch("/editor/insert", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ html: html })
+          });
 
-}
-
-async function insertContent(){
-
-const html=document.getElementById("preview").innerHTML
-
-const response=await fetch("/editor/insert",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({html})
-})
-
-const result=await response.text()
-
-alert(result)
-
-}
+          const result = await response.text();
+          alert(result);
+        }
+      </script>
     </body>
     </html>
   `);
+});
+
+app.post("/generate", async (req, res) => {
+  try {
+    const { standard, prompt } = req.body;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You help teachers create standards-aligned classroom content. Return clean HTML."
+        },
+        {
+          role: "user",
+          content: \`Standard: \${standard}
+Teacher request: \${prompt}\`
+        }
+      ]
+    });
+
+    const html = completion.choices[0].message.content;
+    res.send(html);
+  } catch (error) {
+    console.error(error);
+    res.send("<p>Error generating content.</p>");
+  }
 });
 
 app.post("/editor/insert", (req, res) => {
