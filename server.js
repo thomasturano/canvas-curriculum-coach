@@ -68,7 +68,9 @@ app.all("/lti/editor/login", (req, res) => {
 });
 
 app.all("/lti/editor/launch", (req, res) => {
-  res.send(`
+const deepLinkReturnUrl =
+  req.body["https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"]?.deep_link_return_url || "";
+res.send(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -158,6 +160,8 @@ app.all("/lti/editor/launch", (req, res) => {
       </div>
 
 <script>
+  const deepLinkReturnUrl = "${deepLinkReturnUrl}";
+  
   async function generate() {
     try {
       const standard = document.getElementById("standard").value;
@@ -179,43 +183,30 @@ app.all("/lti/editor/launch", (req, res) => {
     }
   }
 
-  async function insertContent() {
-    const html = document.getElementById("preview").innerHTML;
+async function insertContent() {
+  const html = document.getElementById("preview").innerHTML;
 
-    try {
-      if (window.top && window.top.tinymce && window.top.tinymce.activeEditor) {
-        window.top.tinymce.activeEditor.insertContent(html);
-        alert("Content inserted into Canvas.");
-        return;
-      }
+  const response = await fetch("https://coach.thomasturano.com/editor/deeplink", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      html,
+      deep_link_return_url: deepLinkReturnUrl
+    })
+  });
 
-      if (window.parent && window.parent.tinymce && window.parent.tinymce.activeEditor) {
-        window.parent.tinymce.activeEditor.insertContent(html);
-        alert("Content inserted into Canvas.");
-        return;
-      }
-
-      alert("Could not find the Canvas editor.");
-    } catch (error) {
-      console.error("INSERT ERROR:", error);
-      alert("Insert failed.");
-    }
-  }
+  const form = await response.text();
+  document.body.innerHTML = form;
+  document.forms[0].submit();
+}
 </script>
     </body>
     </html>
   `);
 });
 
-app.post("/editor/insert", (req, res) => {
-  const html = req.body.html;
-
-  if (!html) {
-    return res.send("No HTML received.");
-  }
-
-  res.send("Prototype works: content captured successfully.");
-});
 
 /* ------------------------------
 Chat Page
