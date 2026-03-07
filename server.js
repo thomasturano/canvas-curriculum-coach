@@ -68,9 +68,24 @@ app.all("/lti/editor/login", (req, res) => {
 });
 
 app.all("/lti/editor/launch", (req, res) => {
-const deepLinkReturnUrl =
-  req.body["https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"]?.deep_link_return_url || "";
-res.send(`
+  let deepLinkReturnUrl = "";
+
+  try {
+    const idToken = req.body.id_token;
+
+    if (idToken) {
+      const payload = JSON.parse(
+        Buffer.from(idToken.split(".")[1], "base64").toString()
+      );
+
+      deepLinkReturnUrl =
+        payload["https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"]?.deep_link_return_url || "";
+    }
+  } catch (error) {
+    console.error("Could not decode id_token:", error);
+  }
+
+  res.send(`
     <!DOCTYPE html>
     <html>
     <head>
