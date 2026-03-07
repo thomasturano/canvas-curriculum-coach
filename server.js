@@ -55,8 +55,159 @@ Teacher request: ${prompt}`
 Canvas LTI Endpoints
 ------------------------------ */
 
-app.all("/lti/login", (req, res) => {
-  res.redirect("/chat");
+app.all("/lti/editor/login", (req, res) => {
+  let deepLinkReturnUrl = "";
+
+  try {
+    const idToken = req.body.id_token;
+
+    if (idToken) {
+      const payload = JSON.parse(
+        Buffer.from(idToken.split(".")[1], "base64").toString()
+      );
+
+      deepLinkReturnUrl =
+        payload["https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"]?.deep_link_return_url || "";
+    }
+  } catch (error) {
+    console.error("Could not decode id_token:", error);
+  }
+
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Curriculum Content Builder</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 24px;
+          background: #f7f7f7;
+        }
+        .card {
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 10px;
+          padding: 20px;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+        h1 {
+          margin-top: 0;
+        }
+        label {
+          display: block;
+          font-weight: bold;
+          margin-top: 14px;
+          margin-bottom: 6px;
+        }
+        input, textarea {
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid #ccc;
+          font-family: Arial, sans-serif;
+          font-size: 14px;
+          box-sizing: border-box;
+        }
+        textarea {
+          min-height: 160px;
+        }
+        button {
+          margin-top: 16px;
+          margin-right: 10px;
+          background: #2563eb;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          padding: 12px 18px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        button:hover {
+          background: #1d4ed8;
+        }
+        .helper {
+          color: #666;
+          font-size: 13px;
+          margin-bottom: 12px;
+        }
+        .preview {
+          margin-top: 20px;
+          padding: 15px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          background: #fafafa;
+          min-height: 80px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="card">
+        <h1>Curriculum Content Builder</h1>
+
+        <p class="helper">
+          This is a prototype. Generate content, preview it, then click Insert Into Canvas.
+        </p>
+
+        <label for="standard">Standard</label>
+        <input id="standard" placeholder="ex: 6.RP.A.1" />
+
+        <label for="prompt">Teacher Prompt</label>
+        <textarea id="prompt" placeholder="Create a reteach activity for struggling students"></textarea>
+
+        <button onclick="generate()">Generate</button>
+        <button onclick="insertContent()">Insert Into Canvas</button>
+
+        <div id="preview" class="preview"></div>
+      </div>
+
+      <script>
+        const deepLinkReturnUrl = "${deepLinkReturnUrl}";
+
+        async function generate() {
+          try {
+            const standard = document.getElementById("standard").value;
+            const prompt = document.getElementById("prompt").value;
+
+            const response = await fetch("https://coach.thomasturano.com/generate", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ standard, prompt })
+            });
+
+            const data = await response.text();
+            document.getElementById("preview").innerHTML = data;
+          } catch (error) {
+            console.error("GENERATE ERROR:", error);
+            alert("Generate failed.");
+          }
+        }
+
+        async function insertContent() {
+          const html = document.getElementById("preview").innerHTML;
+
+          const response = await fetch("https://coach.thomasturano.com/editor/deeplink", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              html,
+              deep_link_return_url: deepLinkReturnUrl
+            })
+          });
+
+          const form = await response.text();
+          document.body.innerHTML = form;
+          document.forms[0].submit();
+        }
+      </script>
+    </body>
+    </html>
+  `);
 });
 
 app.all("/lti/launch", (req, res) => {
