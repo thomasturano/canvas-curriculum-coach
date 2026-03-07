@@ -185,6 +185,9 @@ global.deepLinkReturnUrl = deepLinkReturnUrl;
         <button onclick="copyContent()">Copy Content</button>
 
         <div id="preview" class="preview"></div>
+        <p style="font-size:13px;color:#666;">
+Click <b>Copy Content</b>, then paste directly into Canvas.
+</p>
       </div>
 
 <script>
