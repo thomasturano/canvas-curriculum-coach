@@ -182,7 +182,7 @@ global.deepLinkReturnUrl = deepLinkReturnUrl;
         <textarea id="prompt" placeholder="Create a reteach activity for struggling students"></textarea>
 
         <button onclick="generate()">Generate</button>
-        <button onclick="insertContent()">Insert Into Canvas</button>
+        <button onclick="copyContent()">Copy Content</button>
 
         <div id="preview" class="preview"></div>
       </div>
@@ -211,23 +211,29 @@ global.deepLinkReturnUrl = deepLinkReturnUrl;
     }
   }
 
-async function insertContent() {
+async function copyContent() {
+
   const html = document.getElementById("preview").innerHTML;
 
-  const response = await fetch("https://coach.thomasturano.com/editor/deeplink", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      html,
-      deep_link_return_url: deepLinkReturnUrl
-    })
-  });
+  try {
+    await navigator.clipboard.writeText(html);
 
-  const form = await response.text();
-  document.body.innerHTML = form;
-  document.forms[0].submit();
+    alert("Content copied! Paste it into Canvas.");
+
+  } catch (err) {
+
+    const textarea = document.createElement("textarea");
+    textarea.value = html;
+
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    document.execCommand("copy");
+
+    document.body.removeChild(textarea);
+
+    alert("Content copied! Paste it into Canvas.");
+  }
 }
 </script>
     </body>
