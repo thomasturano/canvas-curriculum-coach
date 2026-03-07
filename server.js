@@ -89,8 +89,10 @@ app.all("/lti/editor/launch", (req, res) => {
         Buffer.from(idToken.split(".")[1], "base64").toString()
       );
 
-      deepLinkReturnUrl =
-        payload["https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"]?.deep_link_return_url || "";
+deepLinkReturnUrl =
+  payload["https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"]?.deep_link_return_url || "";
+
+global.deepLinkReturnUrl = deepLinkReturnUrl;
     }
   } catch (error) {
     console.error("Could not decode id_token:", error);
@@ -580,9 +582,11 @@ error:"AI request failed"
 });
 
 app.post("/editor/deeplink", (req, res) => {
-  const { html, deep_link_return_url } = req.body;
 
-  if (!html || !deep_link_return_url) {
+  const html = req.body.html;
+  const deepLinkReturnUrl = global.deepLinkReturnUrl;
+
+  if (!html || !deepLinkReturnUrl) {
     return res.send("Missing html or deep link return URL.");
   }
 
