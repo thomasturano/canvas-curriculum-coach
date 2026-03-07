@@ -553,6 +553,31 @@ error:"AI request failed"
 
 });
 
+app.post("/editor/deeplink", (req, res) => {
+  const { html, deep_link_return_url } = req.body;
+
+  if (!html || !deep_link_return_url) {
+    return res.send("Missing html or deep link return URL.");
+  }
+
+  const payload = {
+    "https://purl.imsglobal.org/spec/lti-dl/claim/content_items": [
+      {
+        type: "html",
+        html: html
+      }
+    ]
+  };
+
+  const jwtValue = Buffer.from(JSON.stringify(payload)).toString("base64");
+
+  res.send(`
+    <form action="${deep_link_return_url}" method="POST">
+      <input type="hidden" name="JWT" value="${jwtValue}" />
+    </form>
+  `);
+});
+
 /* ------------------------------
 Start server
 ------------------------------ */
